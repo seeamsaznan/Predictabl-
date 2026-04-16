@@ -1,23 +1,18 @@
 // app/layout.tsx
-// This is the root layout file -- the outermost shell of the entire app.
-// Every page in Predictabl is rendered inside this layout.
-// It sets up the global font, background color, sidebar navigation,
-// and the main content area that pages get rendered into.
+// Root layout file -- the outermost shell of the entire app.
+// The sidebar is fixed to the left and never scrolls.
+// The main content area on the right scrolls independently.
 
 import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 
-// Metadata is a Next.js feature that sets the browser tab title
-// and description for SEO purposes.
 export const metadata: Metadata = {
   title: "Predictabl",
   description: "Community-driven predictive score market. Predict game scores, join pools, win tokens.",
 };
 
-// RootLayout receives {children} which represents whichever page
-// the user is currently visiting. Next.js injects this automatically.
 export default function RootLayout({
   children,
 }: {
@@ -25,33 +20,64 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-brand-dark text-brand-white min-h-screen">
+      <body
+        style={{
+          backgroundColor: "#0A0A0A",
+          color: "#FFFFFF",
+          margin: 0,
+          padding: 0,
+          fontFamily: "Inter, sans-serif",
+          // Prevent the body itself from scrolling
+          overflow: "hidden",
+          height: "100vh",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            height: "100vh",
+          }}
+        >
+          {/* Sidebar is fixed on the left and never moves */}
+          <div
+            style={{
+              flexShrink: 0,
+              width: "240px",
+              height: "100vh",
+              position: "fixed",
+              left: 0,
+              top: 0,
+              zIndex: 100,
+            }}
+          >
+            <Sidebar />
+          </div>
 
-        {/* The main app container uses flexbox to place the sidebar
-            on the left and the content area on the right, side by side */}
-        <div className="flex min-h-screen">
-
-          {/* Sidebar sits on the left and stays fixed while pages scroll.
-              It contains the logo, navigation links, and token balance. */}
-          <Sidebar />
-
-          {/* The right side takes up all remaining space.
-              It stacks the header on top and the page content below. */}
-          <div className="flex flex-col flex-1 min-w-0">
-
-            {/* Header sits at the top of every page.
-                It shows the page title and token balance on desktop. */}
+          {/* Main content area sits to the right of the sidebar.
+              It has a left margin equal to the sidebar width so
+              content does not hide behind the fixed sidebar.
+              Only this area scrolls -- not the whole page. */}
+          <div
+            style={{
+              marginLeft: "240px",
+              flex: 1,
+              height: "100vh",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <Header />
-
-            {/* Main content area -- this is where each page renders.
-                padding gives breathing room around the page content. */}
-            <main className="flex-1 p-6 overflow-auto">
+            <main
+              style={{
+                flex: 1,
+                padding: "24px",
+              }}
+            >
               {children}
             </main>
-
           </div>
         </div>
-
       </body>
     </html>
   );
