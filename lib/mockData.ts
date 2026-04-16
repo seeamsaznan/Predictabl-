@@ -261,3 +261,10 @@ export const userStats = {
   currentStreak: 3,
   bestPayoutTokens: 12400,
 };
+
+// Helper function to find a single match by its ID.
+// This is used by the predict page to load the correct match
+// when the user arrives from a match card.
+export function getMatchById(id: string): Match | undefined {
+  return matches.find((match) => match.id === id);
+}
