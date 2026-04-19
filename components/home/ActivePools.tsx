@@ -1,19 +1,15 @@
 // components/home/ActivePools.tsx
-// This component displays the matches that are currently open
-// for predictions on the home page.
-// Each card shows the sport, match name, status, and a
-// Predict button that takes the user to the predict page.
+// Active Pools updated with responsive support.
+// On desktop: 2 column grid of match cards.
+// On mobile: single column so each card has more room.
 
 import Link from "next/link";
 import { Match } from "@/lib/mockData";
 
-// This component receives an array of matches as a prop.
-// The parent page will filter and pass only the active matches.
 type ActivePoolsProps = {
   matches: Match[];
 };
 
-// Helper function to get the right color for each match status
 function getStatusColor(status: Match["status"]): string {
   switch (status) {
     case "live":
@@ -27,7 +23,6 @@ function getStatusColor(status: Match["status"]): string {
   }
 }
 
-// Helper function to get the right label for each match status
 function getStatusLabel(status: Match["status"]): string {
   switch (status) {
     case "live":
@@ -44,6 +39,14 @@ function getStatusLabel(status: Match["status"]): string {
 export default function ActivePools({ matches }: ActivePoolsProps) {
   return (
     <div style={{ marginBottom: "24px" }}>
+      {/* Responsive style -- collapses to single column on mobile */}
+      <style>{`
+        @media (max-width: 768px) {
+          .active-pools-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
 
       {/* Section header with title and view all link */}
       <div
@@ -80,10 +83,9 @@ export default function ActivePools({ matches }: ActivePoolsProps) {
         </Link>
       </div>
 
-      {/* Grid of match cards.
-          2 columns on desktop gives each card enough room
-          to display all the information clearly. */}
+      {/* Grid of match cards */}
       <div
+        className="active-pools-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(2, 1fr)",
@@ -101,7 +103,6 @@ export default function ActivePools({ matches }: ActivePoolsProps) {
               borderLeft: `4px solid ${getStatusColor(match.status)}`,
             }}
           >
-            {/* Top row -- sport label and status badge */}
             <div
               style={{
                 display: "flex",
@@ -133,7 +134,6 @@ export default function ActivePools({ matches }: ActivePoolsProps) {
               </span>
             </div>
 
-            {/* Match name */}
             <h3
               style={{
                 fontFamily: "Barlow Condensed, sans-serif",
@@ -148,7 +148,6 @@ export default function ActivePools({ matches }: ActivePoolsProps) {
               {match.homeTeam} vs {match.awayTeam}
             </h3>
 
-            {/* Pool size and entry fee row */}
             <div
               style={{
                 display: "flex",
@@ -204,7 +203,6 @@ export default function ActivePools({ matches }: ActivePoolsProps) {
               </div>
             </div>
 
-            {/* Predict button */}
             <Link
               href={`/predict?match=${match.id}`}
               style={{

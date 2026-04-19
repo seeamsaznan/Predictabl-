@@ -40,3 +40,48 @@ html, body {
 ::-webkit-scrollbar-track { background: #0A0A0A; }
 ::-webkit-scrollbar-thumb { background: #222222; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #00FF87; }
+
+/* Responsive utilities
+   These classes control how the layout adapts to different screen sizes.
+   We use three breakpoints:
+   - Mobile: up to 768px
+   - Tablet: 768px to 1024px  
+   - Desktop: 1024px and above */
+
+/* Hide the desktop sidebar on mobile and tablet */
+@media (max-width: 1024px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+
+  .main-content-area {
+    margin-left: 0 !important;
+  }
+}
+
+/* Show the mobile bottom nav only on mobile */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  /* Add padding at the bottom so content doesnt hide behind the nav */
+  .main-content-area {
+    padding-bottom: 80px !important;
+  }
+}
+
+/* Responsive grid helpers */
+@media (max-width: 768px) {
+  .grid-2-col {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid-4-col {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

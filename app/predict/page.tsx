@@ -1,50 +1,29 @@
 // app/predict/page.tsx
-// This is the Match Detail and Predict page.
-// Users arrive here by clicking "Predict Score" on any match card.
-// The match ID is passed in the URL as a query parameter.
-// For example: /predict?match=match-001
-//
-// This page has several interactive sections:
-// 1. Match header with team names and stats bar
-// 2. Global sentiment showing crowd prediction split
-// 3. Pot capacity progress bar
-// 4. Score picker with live payout calculation
-// 5. Lock Score button that shows a confirmation modal
+// Match Detail and Predict page updated with responsive support.
+// On desktop: 2 column layout with match info on the left and
+// the score picker sticky on the right.
+// On mobile: stacks into a single column so the score picker
+// appears below the match info.
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { getMatchById, Match } from "@/lib/mockData";
+import { getMatchById } from "@/lib/mockData";
 import ScorePicker from "@/components/predict/ScorePicker";
 import Link from "next/link";
 import { Suspense } from "react";
 
-// This is the main content of the predict page.
-// It is separated into its own component because useSearchParams()
-// requires a Suspense boundary in Next.js app router.
 function PredictContent() {
-  // useSearchParams reads the URL query parameters.
-  // For /predict?match=match-001, searchParams.get("match") returns "match-001"
   const searchParams = useSearchParams();
   const matchId = searchParams.get("match") || "match-001";
-
-  // Find the match from our mock data using the ID from the URL
   const match = getMatchById(matchId);
 
-  // Score state -- starts at realistic default values based on sport
   const [homeScore, setHomeScore] = useState(108);
   const [awayScore, setAwayScore] = useState(104);
-
-  // Controls whether the prediction locked modal is visible
   const [showModal, setShowModal] = useState(false);
-
-  // Controls whether the lock button is in loading state
   const [isLocking, setIsLocking] = useState(false);
 
-  // Calculate confidence score based on how close the scores are
-  // to the crowd sentiment. This is a simplified version of the
-  // real algorithm we will build in Phase 9.
   function calculateConfidence(): number {
     const scoreDiff = Math.abs(homeScore - awayScore);
     if (scoreDiff === 0) return 50;
@@ -54,8 +33,6 @@ function PredictContent() {
     return 55;
   }
 
-  // Calculate estimated payout based on pool size and confidence.
-  // Again this is simplified -- the real algorithm comes in Phase 9.
   function calculatePayout(): number {
     if (!match) return 0;
     const confidence = calculateConfidence();
@@ -63,8 +40,6 @@ function PredictContent() {
     return Math.round(match.entryFee * multiplier * 10);
   }
 
-  // Handle the lock prediction button click.
-  // We simulate a loading state for 1 second then show the modal.
   function handleLockPrediction() {
     setIsLocking(true);
     setTimeout(() => {
@@ -73,7 +48,6 @@ function PredictContent() {
     }, 1000);
   }
 
-  // If no match is found for the given ID show an error state
   if (!match) {
     return (
       <div style={{ textAlign: "center", padding: "48px" }}>
@@ -95,6 +69,22 @@ function PredictContent() {
 
   return (
     <div>
+      {/* Responsive style tag -- tells the outer grid to collapse
+          to a single column on mobile */}
+      <style>{`
+        @media (max-width: 768px) {
+          .predict-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .predict-sticky {
+            position: static !important;
+          }
+          .match-header-title {
+            font-size: 24px !important;
+          }
+        }
+      `}</style>
+
       {/* Breadcrumb navigation */}
       <div style={{ marginBottom: "20px" }}>
         <Link
@@ -110,6 +100,7 @@ function PredictContent() {
       </div>
 
       <div
+        className="predict-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 380px",
@@ -119,8 +110,6 @@ function PredictContent() {
       >
         {/* LEFT COLUMN -- match info and sentiment */}
         <div>
-
-          {/* Match header card */}
           <div
             style={{
               backgroundColor: "#111111",
@@ -131,7 +120,6 @@ function PredictContent() {
               background: "linear-gradient(135deg, #0d1a0d 0%, #111111 60%, #0a0a0a 100%)",
             }}
           >
-            {/* League and status */}
             <div
               style={{
                 display: "flex",
@@ -165,7 +153,6 @@ function PredictContent() {
               </span>
             </div>
 
-            {/* Team matchup display */}
             <div
               style={{
                 display: "flex",
@@ -174,7 +161,6 @@ function PredictContent() {
                 marginBottom: "24px",
               }}
             >
-              {/* Home team */}
               <div style={{ textAlign: "center", flex: 1 }}>
                 <div
                   style={{
@@ -192,6 +178,7 @@ function PredictContent() {
                   <span style={{ fontSize: "24px" }}>🏀</span>
                 </div>
                 <p
+                  className="match-header-title"
                   style={{
                     fontFamily: "Barlow Condensed, sans-serif",
                     fontSize: "20px",
@@ -204,7 +191,6 @@ function PredictContent() {
                 </p>
               </div>
 
-              {/* VS and match info */}
               <div style={{ textAlign: "center", padding: "0 24px" }}>
                 <p
                   style={{
@@ -226,7 +212,6 @@ function PredictContent() {
                 </p>
               </div>
 
-              {/* Away team */}
               <div style={{ textAlign: "center", flex: 1 }}>
                 <div
                   style={{
@@ -243,6 +228,7 @@ function PredictContent() {
                   <span style={{ fontSize: "24px" }}>🏀</span>
                 </div>
                 <p
+                  className="match-header-title"
                   style={{
                     fontFamily: "Barlow Condensed, sans-serif",
                     fontSize: "20px",
@@ -256,7 +242,6 @@ function PredictContent() {
               </div>
             </div>
 
-            {/* Stats bar -- total pot, players, odds, tv */}
             <div
               style={{
                 display: "grid",
@@ -292,7 +277,6 @@ function PredictContent() {
             </div>
           </div>
 
-          {/* Global sentiment card */}
           <div
             style={{
               backgroundColor: "#111111",
@@ -333,7 +317,6 @@ function PredictContent() {
               </span>
             </div>
 
-            {/* Sentiment percentages */}
             <div
               style={{
                 display: "flex",
@@ -343,15 +326,7 @@ function PredictContent() {
               }}
             >
               <div>
-                <p
-                  style={{
-                    fontFamily: "Barlow Condensed, sans-serif",
-                    fontSize: "36px",
-                    fontWeight: "700",
-                    color: "#FFFFFF",
-                    lineHeight: 1,
-                  }}
-                >
+                <p style={{ fontFamily: "Barlow Condensed, sans-serif", fontSize: "36px", fontWeight: "700", color: "#FFFFFF", lineHeight: 1 }}>
                   {match.homeSentiment}%
                 </p>
                 <p style={{ color: "#666666", fontSize: "12px", textTransform: "uppercase" }}>
@@ -359,15 +334,7 @@ function PredictContent() {
                 </p>
               </div>
               <div style={{ textAlign: "right" }}>
-                <p
-                  style={{
-                    fontFamily: "Barlow Condensed, sans-serif",
-                    fontSize: "36px",
-                    fontWeight: "700",
-                    color: "#00FF87",
-                    lineHeight: 1,
-                  }}
-                >
+                <p style={{ fontFamily: "Barlow Condensed, sans-serif", fontSize: "36px", fontWeight: "700", color: "#00FF87", lineHeight: 1 }}>
                   {match.awaySentiment}%
                 </p>
                 <p style={{ color: "#666666", fontSize: "12px", textTransform: "uppercase" }}>
@@ -376,35 +343,12 @@ function PredictContent() {
               </div>
             </div>
 
-            {/* Sentiment progress bar */}
-            <div
-              style={{
-                height: "6px",
-                backgroundColor: "#222222",
-                borderRadius: "3px",
-                overflow: "hidden",
-                marginBottom: "20px",
-              }}
-            >
-              <div
-                style={{
-                  height: "100%",
-                  width: `${match.homeSentiment}%`,
-                  backgroundColor: "#FFFFFF",
-                  borderRadius: "3px",
-                }}
-              />
+            <div style={{ height: "6px", backgroundColor: "#222222", borderRadius: "3px", overflow: "hidden", marginBottom: "20px" }}>
+              <div style={{ height: "100%", width: `${match.homeSentiment}%`, backgroundColor: "#FFFFFF", borderRadius: "3px" }} />
             </div>
 
-            {/* Pot capacity */}
             <div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "8px",
-                }}
-              >
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                 <p style={{ color: "#666666", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                   Pot Capacity
                 </p>
@@ -412,30 +356,17 @@ function PredictContent() {
                   {match.potCapacity}% of Cap
                 </p>
               </div>
-              <div
-                style={{
-                  height: "6px",
-                  backgroundColor: "#222222",
-                  borderRadius: "3px",
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${match.potCapacity}%`,
-                    backgroundColor: "#00FF87",
-                    borderRadius: "3px",
-                  }}
-                />
+              <div style={{ height: "6px", backgroundColor: "#222222", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${match.potCapacity}%`, backgroundColor: "#00FF87", borderRadius: "3px" }} />
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN -- score picker and lock prediction */}
+        {/* RIGHT COLUMN -- score picker */}
         <div>
           <div
+            className="predict-sticky"
             style={{
               backgroundColor: "#111111",
               border: "1px solid #222222",
@@ -445,7 +376,6 @@ function PredictContent() {
               top: "24px",
             }}
           >
-            {/* Section header */}
             <div
               style={{
                 display: "flex",
@@ -481,7 +411,6 @@ function PredictContent() {
               </span>
             </div>
 
-            {/* Score picker component */}
             <ScorePicker
               homeTeam={match.homeTeam}
               awayTeam={match.awayTeam}
@@ -491,7 +420,6 @@ function PredictContent() {
               onAwayScoreChange={setAwayScore}
             />
 
-            {/* Estimated payout and confidence score */}
             <div
               style={{
                 backgroundColor: "#1A1A1A",
@@ -501,24 +429,11 @@ function PredictContent() {
                 marginBottom: "16px",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "8px",
-                }}
-              >
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                 <span style={{ color: "#666666", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                   Est. Payout
                 </span>
-                <span
-                  style={{
-                    color: "#00FF87",
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    fontFamily: "Barlow Condensed, sans-serif",
-                  }}
-                >
+                <span style={{ color: "#00FF87", fontSize: "16px", fontWeight: "700", fontFamily: "Barlow Condensed, sans-serif" }}>
                   {estimatedPayout.toLocaleString()} TOKENS
                 </span>
               </div>
@@ -539,19 +454,10 @@ function PredictContent() {
               </div>
             </div>
 
-            {/* Entry fee notice */}
-            <p
-              style={{
-                color: "#666666",
-                fontSize: "12px",
-                textAlign: "center",
-                marginBottom: "16px",
-              }}
-            >
+            <p style={{ color: "#666666", fontSize: "12px", textAlign: "center", marginBottom: "16px" }}>
               Entry fee: {match.entryFee} TKNS will be deducted
             </p>
 
-            {/* Lock Score button */}
             <button
               onClick={handleLockPrediction}
               disabled={isLocking}
@@ -577,7 +483,6 @@ function PredictContent() {
         </div>
       </div>
 
-      {/* Prediction Locked Modal */}
       {showModal && (
         <div
           style={{
@@ -588,6 +493,7 @@ function PredictContent() {
             alignItems: "center",
             justifyContent: "center",
             zIndex: 1000,
+            padding: "20px",
           }}
         >
           <div
@@ -601,7 +507,6 @@ function PredictContent() {
               textAlign: "center",
             }}
           >
-            {/* Green checkmark */}
             <div
               style={{
                 width: "64px",
@@ -617,46 +522,20 @@ function PredictContent() {
               <span style={{ fontSize: "28px", color: "#0A0A0A" }}>✓</span>
             </div>
 
-            <h2
-              style={{
-                fontFamily: "Barlow Condensed, sans-serif",
-                fontSize: "32px",
-                fontWeight: "800",
-                color: "#FFFFFF",
-                textTransform: "uppercase",
-                marginBottom: "12px",
-              }}
-            >
+            <h2 style={{ fontFamily: "Barlow Condensed, sans-serif", fontSize: "32px", fontWeight: "800", color: "#FFFFFF", textTransform: "uppercase", marginBottom: "12px" }}>
               Prediction Locked
             </h2>
 
-            <p
-              style={{
-                color: "#00FF87",
-                fontSize: "20px",
-                fontWeight: "700",
-                fontFamily: "Barlow Condensed, sans-serif",
-                marginBottom: "24px",
-              }}
-            >
+            <p style={{ color: "#00FF87", fontSize: "20px", fontWeight: "700", fontFamily: "Barlow Condensed, sans-serif", marginBottom: "24px" }}>
               {match.homeTeam} {homeScore} — {match.awayTeam} {awayScore}
             </p>
 
-            <div
-              style={{
-                backgroundColor: "#1A1A1A",
-                borderRadius: "8px",
-                padding: "12px 20px",
-                marginBottom: "24px",
-                display: "inline-block",
-              }}
-            >
+            <div style={{ backgroundColor: "#1A1A1A", borderRadius: "8px", padding: "12px 20px", marginBottom: "24px", display: "inline-block" }}>
               <span style={{ color: "#AAAAAA", fontSize: "13px" }}>
                 {match.entryFee} TOKENS DEDUCTED
               </span>
             </div>
 
-            {/* Action buttons */}
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <Link
                 href="/matches"
@@ -697,16 +576,7 @@ function PredictContent() {
               </Link>
             </div>
 
-            {/* Transaction ID */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: "24px",
-                paddingTop: "16px",
-                borderTop: "1px solid #222222",
-              }}
-            >
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #222222" }}>
               <span style={{ color: "#444444", fontSize: "11px" }}>
                 TXID: CL-8842-X9
               </span>
@@ -721,10 +591,6 @@ function PredictContent() {
   );
 }
 
-// The default export wraps PredictContent in a Suspense boundary.
-// This is required by Next.js when using useSearchParams() in a
-// client component -- it prevents the page from crashing during
-// server side rendering while waiting for the URL params.
 export default function PredictPage() {
   return (
     <Suspense fallback={

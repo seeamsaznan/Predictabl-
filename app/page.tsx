@@ -1,15 +1,8 @@
 // app/page.tsx
-// This is the Home page of Predictabl.
-// It assembles all the home page components together:
-// 1. FeaturedMatch -- the hero banner at the top
-// 2. PerformanceDashboard -- the user's overall stats
-// 3. ActivePools -- matches currently open for predictions
-// 4. RecentResults -- the user's recent prediction outcomes
-//
-// This page imports data from mockData and passes it down
-// to each component as props. When we connect the real backend
-// in Phase 11, we will replace the mock data imports with
-// real API calls -- the components themselves won't change.
+// Home page updated with responsive support.
+// On desktop: 2 column layout with active pools on the left
+// and recent results on the right.
+// On mobile: stacks into single column with recent results below.
 
 import FeaturedMatch from "@/components/home/FeaturedMatch";
 import PerformanceDashboard from "@/components/home/PerformanceDashboard";
@@ -18,34 +11,32 @@ import RecentResults from "@/components/home/RecentResults";
 import { matches, predictions } from "@/lib/mockData";
 
 export default function HomePage() {
-  // Find the featured match -- we pick the live match first,
-  // then fall back to closing, then open.
-  // The exclamation mark tells TypeScript we are sure this
-  // will not be undefined because we always have a live match
-  // in our mock data.
   const featuredMatch =
     matches.find((m) => m.status === "live") ||
     matches.find((m) => m.status === "closing") ||
     matches[0];
 
-  // Active pools are matches that are not ended yet.
-  // We show a maximum of 4 on the home page.
   const activePools = matches
     .filter((m) => m.status !== "ended")
     .slice(0, 4);
 
   return (
     <div>
-      {/* The featured match hero banner */}
-      <FeaturedMatch match={featuredMatch} />
+      {/* Responsive style tag -- collapses the bottom grid to a
+          single column on mobile so cards stack vertically */}
+      <style>{`
+        @media (max-width: 768px) {
+          .home-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
 
-      {/* The user's performance stats grid */}
+      <FeaturedMatch match={featuredMatch} />
       <PerformanceDashboard />
 
-      {/* Two column layout for active pools and recent results.
-          This uses CSS grid to put pools on the left (wider)
-          and recent results on the right (narrower). */}
       <div
+        className="home-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",

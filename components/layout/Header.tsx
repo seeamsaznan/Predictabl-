@@ -1,18 +1,15 @@
 // components/layout/Header.tsx
-// This is the top header bar that appears above every page.
-// It displays the current page name, the user's token balance,
-// a notification bell, and a user avatar.
-// It is a client component because it reads the current URL
-// to determine which page title to display.
+// Top header bar with full responsive support.
+// On desktop: shows page title + welcome message on the left,
+// full token pill + notification bell + user dropdown on the right.
+// On mobile: shows logo + PREDICTABL branding on the left,
+// compact token count + bell + avatar only on the right.
 
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Zap } from "lucide-react";
 
-// This object maps URL paths to human readable page titles.
-// When the user is on /matches, the header shows "Matches".
-// To add a new page title, just add a new key value pair here.
 const pageTitles: Record<string, string> = {
   "/": "Home",
   "/matches": "Matches",
@@ -23,66 +20,251 @@ const pageTitles: Record<string, string> = {
 };
 
 export default function Header() {
-  // Read the current URL path from the browser
   const pathname = usePathname();
-
-  // Look up the page title for the current path.
-  // If no title is found (for example a dynamic route), fall back to "Predictabl"
   const pageTitle = pageTitles[pathname] ?? "Predictabl";
 
   return (
-    // The header spans the full width of the content area.
-    // It sticks to the top as the user scrolls down the page.
-    // A bottom border separates it from the page content below.
-    <header className="sticky top-0 z-10 bg-brand-card border-b border-brand-border px-6 py-4">
+    <>
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .header-welcome {
+            display: none !important;
+          }
+          .header-username {
+            display: none !important;
+          }
+          .header-chevron {
+            display: none !important;
+          }
+          .header-token-label {
+            display: none !important;
+          }
+          .mobile-logo {
+            display: flex !important;
+          }
+          .header-title-desktop {
+            display: none !important;
+          }
+          .header-title-mobile {
+            display: block !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .header-title-mobile {
+            font-size: 16px !important;
+          }
+          .header-token-pill {
+            padding: 6px 10px !important;
+          }
+        }
+      `}</style>
 
-      {/* Flexbox row with the page title on the left
-          and the user controls on the right */}
-      <div className="flex items-center justify-between">
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          backgroundColor: "#111111",
+          borderBottom: "1px solid #222222",
+          padding: "16px 24px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+          }}
+        >
+          {/* LEFT SIDE -- logo + title */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+            {/* Mobile logo -- only shows on mobile/tablet */}
+            <div
+              className="mobile-logo"
+              style={{
+                display: "none",
+                width: "32px",
+                height: "32px",
+                backgroundColor: "#00FF87",
+                borderRadius: "6px",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Zap size={16} color="#0A0A0A" />
+            </div>
 
-        {/* Left side -- current page title */}
-        <div>
-          <h1 className="font-display text-xl font-bold text-brand-white tracking-wide">
-            {pageTitle}
-          </h1>
-          <p className="text-brand-muted text-xs mt-0.5">
-            Welcome back, Jordan_Dev
-          </p>
-        </div>
+            <div style={{ minWidth: 0 }}>
+              {/* Desktop shows the current page title */}
+              <h1
+                className="header-title-desktop"
+                style={{
+                  fontFamily: "Barlow Condensed, sans-serif",
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: "#FFFFFF",
+                  letterSpacing: "0.02em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {pageTitle}
+              </h1>
 
-        {/* Right side -- token balance, notifications, avatar */}
-        <div className="flex items-center gap-4">
+              {/* Mobile shows PREDICTABL branding instead */}
+              <h1
+                className="header-title-mobile"
+                style={{
+                  display: "none",
+                  fontFamily: "Barlow Condensed, sans-serif",
+                  fontSize: "18px",
+                  fontWeight: "800",
+                  color: "#FFFFFF",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                PREDICTABL
+              </h1>
 
-          {/* Token balance pill -- shows how many tokens the user has */}
-          <div className="bg-brand-surface border border-brand-border rounded-lg px-4 py-2 flex items-center gap-2">
-            {/* Green dot indicator */}
-            <div className="w-2 h-2 bg-brand-green rounded-full" />
-            <span className="text-brand-green font-bold text-sm font-display">
-              1,240 TKNS
-            </span>
+              <p
+                className="header-welcome"
+                style={{
+                  color: "#666666",
+                  fontSize: "11px",
+                  marginTop: "2px",
+                }}
+              >
+                Welcome back, Jordan_Dev
+              </p>
+            </div>
           </div>
 
-          {/* Notification bell button */}
-          <button className="relative w-10 h-10 bg-brand-surface border border-brand-border rounded-lg flex items-center justify-center hover:border-brand-green transition-colors duration-200">
-            <Bell size={16} className="text-brand-muted" />
-            {/* Red dot badge showing there are unread notifications */}
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-brand-red rounded-full" />
-          </button>
-
-          {/* User avatar button -- shows initials and a dropdown arrow */}
-          <button className="flex items-center gap-2 bg-brand-surface border border-brand-border rounded-lg px-3 py-2 hover:border-brand-green transition-colors duration-200">
-            {/* Green square avatar with user initials */}
-            <div className="w-7 h-7 bg-brand-green rounded-sm flex items-center justify-center">
-              <span className="text-brand-dark font-bold text-xs">JD</span>
+          {/* RIGHT SIDE -- token balance, bell, avatar */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+            {/* Token balance pill */}
+            <div
+              className="header-token-pill"
+              style={{
+                backgroundColor: "#1A1A1A",
+                border: "1px solid #222222",
+                borderRadius: "8px",
+                padding: "8px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <div
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  backgroundColor: "#00FF87",
+                  borderRadius: "50%",
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  color: "#00FF87",
+                  fontWeight: "700",
+                  fontSize: "12px",
+                  fontFamily: "Barlow Condensed, sans-serif",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                1,240
+                <span className="header-token-label" style={{ marginLeft: "4px" }}>
+                  TKNS
+                </span>
+              </span>
             </div>
-            <span className="text-brand-white text-sm font-medium">
-              Jordan_Dev
-            </span>
-            <ChevronDown size={14} className="text-brand-muted" />
-          </button>
 
+            {/* Notification bell */}
+            <button
+              style={{
+                position: "relative",
+                width: "36px",
+                height: "36px",
+                backgroundColor: "#1A1A1A",
+                border: "1px solid #222222",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              <Bell size={14} color="#666666" />
+              <span
+                style={{
+                  position: "absolute",
+                  top: "8px",
+                  right: "8px",
+                  width: "5px",
+                  height: "5px",
+                  backgroundColor: "#FF3B3B",
+                  borderRadius: "50%",
+                }}
+              />
+            </button>
+
+            {/* User avatar button */}
+            <button
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: "#1A1A1A",
+                border: "1px solid #222222",
+                borderRadius: "8px",
+                padding: "6px 10px",
+                cursor: "pointer",
+              }}
+            >
+              <div
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  backgroundColor: "#00FF87",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ color: "#0A0A0A", fontWeight: "700", fontSize: "10px" }}>
+                  JD
+                </span>
+              </div>
+              <span
+                className="header-username"
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Jordan_Dev
+              </span>
+              <ChevronDown
+                className="header-chevron"
+                size={12}
+                color="#666666"
+              />
+            </button>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }

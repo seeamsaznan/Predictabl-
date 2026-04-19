@@ -1,10 +1,7 @@
 // app/matches/page.tsx
 // This is the Matches page of Predictabl.
-// It displays all available matches with filtering by sport,
-// filtering by status, and a search bar.
-// It is a client component because it uses React state to
-// track which filters are active and update the list instantly
-// without reloading the page.
+// Updated with responsive support -- the match cards grid
+// collapses from 2 columns to 1 column on mobile screens.
 
 "use client";
 
@@ -13,11 +10,8 @@ import { matches, Match, Sport } from "@/lib/mockData";
 import MatchCard from "@/components/matches/MatchCard";
 import { Search } from "lucide-react";
 
-// The list of sport filter pills shown at the top.
-// "ALL" is a special value meaning no sport filter is applied.
 const sportFilters: (Sport | "ALL")[] = ["ALL", "NBA", "NFL", "Soccer", "UFC", "MLB"];
 
-// The list of status tabs shown below the sport filters.
 type StatusFilter = "ALL" | "open" | "closing" | "live" | "ended";
 const statusFilters: { label: string; value: StatusFilter }[] = [
   { label: "All Games", value: "ALL" },
@@ -28,49 +22,41 @@ const statusFilters: { label: string; value: StatusFilter }[] = [
 ];
 
 export default function MatchesPage() {
-  // useState stores the currently selected filters.
-  // When these values change, React automatically re-renders
-  // the component with the new filtered list.
-  // This is the core of how interactive filtering works in React.
   const [selectedSport, setSelectedSport] = useState<Sport | "ALL">("ALL");
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // This is the filtering logic.
-  // We start with all matches and apply each filter one by one.
-  // The result is a new array containing only the matches that
-  // pass all three filters simultaneously.
   const filteredMatches = matches.filter((match) => {
-    // Sport filter -- skip if ALL is selected
     const sportMatch =
       selectedSport === "ALL" || match.sport === selectedSport;
-
-    // Status filter -- skip if ALL is selected
     const statusMatch =
       selectedStatus === "ALL" || match.status === selectedStatus;
-
-    // Search filter -- check if the search query appears in
-    // the team names or league name (case insensitive)
     const searchMatch =
       searchQuery === "" ||
       match.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.league.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // A match only appears if it passes ALL three filters
     return sportMatch && statusMatch && searchMatch;
   });
 
   return (
     <div>
+      {/* Responsive style tag -- tells the grid below to collapse
+          from 2 columns to 1 column when screen width is under 768px */}
+      <style>{`
+        @media (max-width: 768px) {
+          .matches-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .status-tabs {
+            overflow-x: auto;
+            white-space: nowrap;
+          }
+        }
+      `}</style>
 
       {/* Search bar */}
-      <div
-        style={{
-          position: "relative",
-          marginBottom: "20px",
-        }}
-      >
+      <div style={{ position: "relative", marginBottom: "20px" }}>
         <Search
           size={16}
           style={{
@@ -85,8 +71,6 @@ export default function MatchesPage() {
           type="text"
           placeholder="Search matches..."
           value={searchQuery}
-          // Every time the user types a character, update searchQuery.
-          // React re-renders and the filtered list updates instantly.
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             width: "100%",
@@ -140,6 +124,7 @@ export default function MatchesPage() {
 
       {/* Status filter tabs */}
       <div
+        className="status-tabs"
         style={{
           display: "flex",
           gap: "0",
@@ -193,6 +178,7 @@ export default function MatchesPage() {
       {/* Match cards grid */}
       {filteredMatches.length > 0 ? (
         <div
+          className="matches-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(2, 1fr)",
@@ -204,7 +190,6 @@ export default function MatchesPage() {
           ))}
         </div>
       ) : (
-        // Empty state when no matches pass the filters
         <div
           style={{
             backgroundColor: "#111111",

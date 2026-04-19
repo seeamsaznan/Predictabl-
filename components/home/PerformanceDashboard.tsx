@@ -1,15 +1,10 @@
 // components/home/PerformanceDashboard.tsx
-// This component displays the user's overall performance stats
-// on the home page. It shows 4 key metrics in a grid of cards:
-// predictions made, win rate, total tokens won, and best payout.
-// These numbers give the user an instant snapshot of how they
-// are doing across all their predictions.
+// Performance Dashboard updated with responsive support.
+// On desktop: 4 column grid.
+// On mobile: 2 column grid so stats stay readable.
 
 import { userStats } from "@/lib/mockData";
 
-// Each stat card has a label, a value, and an optional color
-// for the value text. We define them as an array so we can
-// map over them instead of writing 4 separate card elements.
 const stats = [
   {
     label: "Predictions Made",
@@ -45,7 +40,15 @@ export default function PerformanceDashboard() {
         borderLeft: "4px solid #00FF87",
       }}
     >
-      {/* Section label */}
+      {/* Responsive style -- collapses 4 cols to 2 cols on mobile */}
+      <style>{`
+        @media (max-width: 768px) {
+          .performance-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+      `}</style>
+
       <p
         style={{
           color: "#666666",
@@ -59,9 +62,8 @@ export default function PerformanceDashboard() {
         Performance Dashboard
       </p>
 
-      {/* 4 column grid of stat cards.
-          Each card shows one key metric. */}
       <div
+        className="performance-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
@@ -79,7 +81,6 @@ export default function PerformanceDashboard() {
               padding: "20px 24px",
             }}
           >
-            {/* Stat label */}
             <p
               style={{
                 color: "#666666",
@@ -92,12 +93,10 @@ export default function PerformanceDashboard() {
             >
               {stat.label}
             </p>
-
-            {/* Stat value -- big and bold */}
             <p
               style={{
                 color: stat.color,
-                fontSize: "32px",
+                fontSize: "28px",
                 fontWeight: "700",
                 fontFamily: "Barlow Condensed, sans-serif",
                 lineHeight: 1,
