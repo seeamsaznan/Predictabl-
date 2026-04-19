@@ -1,17 +1,34 @@
 // app/matches/page.tsx
-// This is the Matches page of Predictabl.
-// Updated with responsive support -- the match cards grid
-// collapses from 2 columns to 1 column on mobile screens.
+// Matches page with a professional sport dropdown + dynamic league chips.
+// Structure:
+// 1. Search bar
+// 2. Sport dropdown -- user picks top-level sport (All Games, Basketball, etc.)
+// 3. League chips -- dynamically show leagues for the selected sport
+// 4. Status tabs -- All / Open / Closing / Live / Ended
+// 5. Match grid
 
 "use client";
 
-import { useState } from "react";
-import { matches, Match, Sport } from "@/lib/mockData";
+import { useState, useRef, useEffect } from "react";
+import { matches, Sport, leaguesBySport } from "@/lib/mockData";
 import MatchCard from "@/components/matches/MatchCard";
-import { Search } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 
-const sportFilters: (Sport | "ALL")[] = ["ALL", "NBA", "NFL", "Soccer", "UFC", "MLB"];
+// The top level sports shown in the dropdown.
+// "All Games" is a special value meaning no sport filter.
+type SportFilter = "All Games" | Sport;
+const sportOptions: SportFilter[] = [
+  "All Games",
+  "Basketball",
+  "Football",
+  "Soccer",
+  "Cricket",
+  "Hockey",
+  "MMA",
+  "Baseball",
+];
 
+// The status tabs shown below the league chips
 type StatusFilter = "ALL" | "open" | "closing" | "live" | "ended";
 const statusFilters: { label: string; value: StatusFilter }[] = [
   { label: "All Games", value: "ALL" },
@@ -22,27 +39,74 @@ const statusFilters: { label: string; value: StatusFilter }[] = [
 ];
 
 export default function MatchesPage() {
-  const [selectedSport, setSelectedSport] = useState<Sport | "ALL">("ALL");
+  // Which sport is selected in the dropdown
+  const [selectedSport, setSelectedSport] = useState<SportFilter>("All Games");
+
+  // Which league chip is selected (always "All" when sport changes)
+  const [selectedLeague, setSelectedLeague] = useState<string>("All");
+
+  // Whether the sport dropdown is currently open
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Which status tab is selected
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("ALL");
+
+  // Search query typed by the user
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Ref to detect clicks outside the dropdown so we can close it
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close the dropdown when the user clicks anywhere outside it
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Get the leagues for the currently selected sport.
+  // If "All Games" is selected, there are no league chips to show.
+  const availableLeagues =
+    selectedSport === "All Games" ? [] : leaguesBySport[selectedSport];
+
+  // When user picks a different sport, reset the league to "All"
+  function handleSportChange(sport: SportFilter) {
+    setSelectedSport(sport);
+    setSelectedLeague("All");
+    setDropdownOpen(false);
+  }
+
+  // Filter matches based on all active filters
   const filteredMatches = matches.filter((match) => {
+    // Sport filter -- skip if "All Games"
     const sportMatch =
-      selectedSport === "ALL" || match.sport === selectedSport;
+      selectedSport === "All Games" || match.sport === selectedSport;
+
+    // League filter -- skip if "All"
+    const leagueMatch =
+      selectedLeague === "All" || match.league === selectedLeague;
+
+    // Status filter -- skip if ALL
     const statusMatch =
       selectedStatus === "ALL" || match.status === selectedStatus;
+
+    // Search filter
     const searchMatch =
       searchQuery === "" ||
       match.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.league.toLowerCase().includes(searchQuery.toLowerCase());
-    return sportMatch && statusMatch && searchMatch;
+
+    return sportMatch && leagueMatch && statusMatch && searchMatch;
   });
 
   return (
     <div>
-      {/* Responsive style tag -- tells the grid below to collapse
-          from 2 columns to 1 column when screen width is under 768px */}
+      {/* Responsive styles */}
       <style>{`
         @media (max-width: 768px) {
           .matches-grid {
@@ -52,11 +116,16 @@ export default function MatchesPage() {
             overflow-x: auto;
             white-space: nowrap;
           }
+          .league-chips {
+            overflow-x: auto;
+            white-space: nowrap;
+            flex-wrap: nowrap !important;
+          }
         }
       `}</style>
 
       {/* Search bar */}
-      <div style={{ position: "relative", marginBottom: "20px" }}>
+      <div style={{ position: "relative", marginBottom: "16px" }}>
         <Search
           size={16}
           style={{
@@ -86,41 +155,145 @@ export default function MatchesPage() {
         />
       </div>
 
-      {/* Sport filter pills */}
+      {/* Sport dropdown */}
       <div
+        ref={dropdownRef}
         style={{
-          display: "flex",
-          gap: "8px",
-          marginBottom: "20px",
-          flexWrap: "wrap",
+          position: "relative",
+          marginBottom: "16px",
+          display: "inline-block",
+          width: "100%",
+          maxWidth: "280px",
         }}
       >
-        {sportFilters.map((sport) => {
-          const isActive = selectedSport === sport;
-          return (
-            <button
-              key={sport}
-              onClick={() => setSelectedSport(sport)}
+        {/* Dropdown trigger button */}
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          style={{
+            width: "100%",
+            backgroundColor: "#111111",
+            border: "1px solid #222222",
+            borderRadius: "8px",
+            padding: "12px 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            cursor: "pointer",
+            color: "#FFFFFF",
+            fontSize: "14px",
+            fontWeight: "600",
+            fontFamily: "Barlow Condensed, sans-serif",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+          }}
+        >
+          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span
               style={{
-                backgroundColor: isActive ? "#00FF87" : "transparent",
-                color: isActive ? "#0A0A0A" : "#666666",
-                border: isActive ? "1px solid #00FF87" : "1px solid #333333",
-                borderRadius: "6px",
-                padding: "8px 16px",
-                fontSize: "12px",
-                fontWeight: "700",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                cursor: "pointer",
-                fontFamily: "Barlow Condensed, sans-serif",
-                transition: "all 0.2s",
+                width: "8px",
+                height: "8px",
+                backgroundColor: "#00FF87",
+                borderRadius: "50%",
               }}
-            >
-              {sport}
-            </button>
-          );
-        })}
+            />
+            {selectedSport}
+          </span>
+          <ChevronDown
+            size={16}
+            color="#666666"
+            style={{
+              transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.2s",
+            }}
+          />
+        </button>
+
+        {/* Dropdown panel */}
+        {dropdownOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              left: 0,
+              right: 0,
+              backgroundColor: "#111111",
+              border: "1px solid #222222",
+              borderRadius: "8px",
+              padding: "6px",
+              zIndex: 50,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            }}
+          >
+            {sportOptions.map((sport) => {
+              const isActive = selectedSport === sport;
+              return (
+                <button
+                  key={sport}
+                  onClick={() => handleSportChange(sport)}
+                  style={{
+                    width: "100%",
+                    backgroundColor: isActive ? "rgba(0,255,135,0.1)" : "transparent",
+                    color: isActive ? "#00FF87" : "#AAAAAA",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "10px 14px",
+                    textAlign: "left",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    fontFamily: "Barlow Condensed, sans-serif",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {sport}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* League chips -- only shown if a specific sport is selected */}
+      {availableLeagues.length > 0 && (
+        <div
+          className="league-chips"
+          style={{
+            display: "flex",
+            gap: "8px",
+            marginBottom: "20px",
+            flexWrap: "wrap",
+          }}
+        >
+          {availableLeagues.map((league) => {
+            const isActive = selectedLeague === league;
+            return (
+              <button
+                key={league}
+                onClick={() => setSelectedLeague(league)}
+                style={{
+                  backgroundColor: isActive ? "#00FF87" : "transparent",
+                  color: isActive ? "#0A0A0A" : "#AAAAAA",
+                  border: isActive ? "1px solid #00FF87" : "1px solid #333333",
+                  borderRadius: "6px",
+                  padding: "8px 16px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  cursor: "pointer",
+                  fontFamily: "Barlow Condensed, sans-serif",
+                  transition: "all 0.2s",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {league}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Status filter tabs */}
       <div
@@ -142,9 +315,7 @@ export default function MatchesPage() {
                 backgroundColor: "transparent",
                 color: isActive ? "#00FF87" : "#666666",
                 border: "none",
-                borderBottom: isActive
-                  ? "2px solid #00FF87"
-                  : "2px solid transparent",
+                borderBottom: isActive ? "2px solid #00FF87" : "2px solid transparent",
                 padding: "12px 20px",
                 fontSize: "13px",
                 fontWeight: "600",
@@ -154,6 +325,7 @@ export default function MatchesPage() {
                 fontFamily: "Barlow Condensed, sans-serif",
                 transition: "all 0.2s",
                 marginBottom: "-1px",
+                whiteSpace: "nowrap",
               }}
             >
               {filter.label}
