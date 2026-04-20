@@ -1,9 +1,11 @@
 // app/predict/page.tsx
-// Match Detail and Predict page updated with responsive support.
-// On desktop: 2 column layout with match info on the left and
-// the score picker sticky on the right.
-// On mobile: stacks into a single column so the score picker
-// appears below the match info.
+// Match Detail and Predict page.
+// Desktop: 2-column grid with match info on the left, Lock Prediction
+// sticky on the right.
+// Mobile: single column where Lock Prediction is moved UP to appear
+// right after the match header and stats bar, before Global Sentiment.
+// Mobile version has a compact match header so more of the Lock
+// Prediction section fits on screen without scrolling.
 
 "use client";
 
@@ -69,35 +71,57 @@ function PredictContent() {
 
   return (
     <div>
-      {/* Responsive style tag -- tells the outer grid to collapse
-          to a single column on mobile */}
       <style>{`
         @media (max-width: 768px) {
           .predict-grid {
             grid-template-columns: 1fr !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          .predict-left-column {
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          .match-info-card {
+            order: 1;
+            padding: 20px !important;
+          }
+          .match-lock-wrapper-mobile {
+            order: 2;
+          }
+          .match-sentiment-card {
+            order: 3;
+          }
+          .predict-right-column {
+            display: none !important;
           }
           .predict-sticky {
             position: static !important;
           }
           .match-header-title {
+            font-size: 18px !important;
+          }
+          .match-team-icon {
+            width: 48px !important;
+            height: 48px !important;
+          }
+          .match-vs-text {
             font-size: 24px !important;
+          }
+          .match-teams-row {
+            margin-bottom: 16px !important;
+          }
+          .match-header-top {
+            margin-bottom: 16px !important;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .match-lock-wrapper-mobile {
+            display: none !important;
           }
         }
       `}</style>
-
-      {/* Breadcrumb navigation */}
-      <div style={{ marginBottom: "20px" }}>
-        <Link
-          href="/matches"
-          style={{ color: "#666666", fontSize: "13px", textDecoration: "none" }}
-        >
-          Matches
-        </Link>
-        <span style={{ color: "#444444", margin: "0 8px" }}>→</span>
-        <span style={{ color: "#FFFFFF", fontSize: "13px" }}>
-          {match.homeTeam} vs {match.awayTeam}
-        </span>
-      </div>
 
       <div
         className="predict-grid"
@@ -108,9 +132,12 @@ function PredictContent() {
           alignItems: "start",
         }}
       >
-        {/* LEFT COLUMN -- match info and sentiment */}
-        <div>
+        {/* LEFT COLUMN */}
+        <div className="predict-left-column">
+
+          {/* Match header card */}
           <div
+            className="match-info-card"
             style={{
               backgroundColor: "#111111",
               border: "1px solid #222222",
@@ -121,6 +148,7 @@ function PredictContent() {
             }}
           >
             <div
+              className="match-header-top"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -154,6 +182,7 @@ function PredictContent() {
             </div>
 
             <div
+              className="match-teams-row"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -163,6 +192,7 @@ function PredictContent() {
             >
               <div style={{ textAlign: "center", flex: 1 }}>
                 <div
+                  className="match-team-icon"
                   style={{
                     width: "64px",
                     height: "64px",
@@ -193,6 +223,7 @@ function PredictContent() {
 
               <div style={{ textAlign: "center", padding: "0 24px" }}>
                 <p
+                  className="match-vs-text"
                   style={{
                     fontFamily: "Barlow Condensed, sans-serif",
                     fontSize: "32px",
@@ -214,6 +245,7 @@ function PredictContent() {
 
               <div style={{ textAlign: "center", flex: 1 }}>
                 <div
+                  className="match-team-icon"
                   style={{
                     width: "64px",
                     height: "64px",
@@ -277,7 +309,125 @@ function PredictContent() {
             </div>
           </div>
 
+          {/* MOBILE ONLY -- Lock Prediction */}
           <div
+            className="match-lock-wrapper-mobile"
+            style={{
+              backgroundColor: "#111111",
+              border: "1px solid #222222",
+              borderRadius: "12px",
+              padding: "24px",
+              marginBottom: "16px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "20px",
+              }}
+            >
+              <p
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                Lock Prediction
+              </p>
+              <span
+                style={{
+                  backgroundColor: "rgba(0,255,135,0.1)",
+                  color: "#00FF87",
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  padding: "4px 10px",
+                  borderRadius: "4px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                Elite Tier
+              </span>
+            </div>
+
+            <ScorePicker
+              homeTeam={match.homeTeam}
+              awayTeam={match.awayTeam}
+              homeScore={homeScore}
+              awayScore={awayScore}
+              onHomeScoreChange={setHomeScore}
+              onAwayScoreChange={setAwayScore}
+            />
+
+            <div
+              style={{
+                backgroundColor: "#1A1A1A",
+                borderRadius: "8px",
+                padding: "16px",
+                marginTop: "16px",
+                marginBottom: "16px",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ color: "#666666", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Est. Payout
+                </span>
+                <span style={{ color: "#00FF87", fontSize: "16px", fontWeight: "700", fontFamily: "Barlow Condensed, sans-serif" }}>
+                  {estimatedPayout.toLocaleString()} TOKENS
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#666666", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Confidence Score
+                </span>
+                <span
+                  style={{
+                    color: confidence >= 75 ? "#00FF87" : confidence >= 60 ? "#FF8C00" : "#FF3B3B",
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    fontFamily: "Barlow Condensed, sans-serif",
+                  }}
+                >
+                  {confidence} / 100
+                </span>
+              </div>
+            </div>
+
+            <p style={{ color: "#666666", fontSize: "12px", textAlign: "center", marginBottom: "16px" }}>
+              Entry fee: {match.entryFee} TKNS will be deducted
+            </p>
+
+            <button
+              onClick={handleLockPrediction}
+              disabled={isLocking}
+              style={{
+                width: "100%",
+                backgroundColor: isLocking ? "#00CC6A" : "#00FF87",
+                color: "#0A0A0A",
+                fontWeight: "700",
+                fontSize: "16px",
+                padding: "16px",
+                borderRadius: "8px",
+                border: "none",
+                cursor: isLocking ? "not-allowed" : "pointer",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                fontFamily: "Barlow Condensed, sans-serif",
+                transition: "all 0.2s",
+              }}
+            >
+              {isLocking ? "LOCKING..." : "LOCK SCORE"}
+            </button>
+          </div>
+
+          {/* Global sentiment card */}
+          <div
+            className="match-sentiment-card"
             style={{
               backgroundColor: "#111111",
               border: "1px solid #222222",
@@ -363,8 +513,8 @@ function PredictContent() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN -- score picker */}
-        <div>
+        {/* RIGHT COLUMN -- desktop only */}
+        <div className="predict-right-column">
           <div
             className="predict-sticky"
             style={{
@@ -483,6 +633,7 @@ function PredictContent() {
         </div>
       </div>
 
+      {/* Prediction Locked Modal */}
       {showModal && (
         <div
           style={{
